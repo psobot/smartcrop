@@ -8,50 +8,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "SmartCrop/main.cpp"
-         timestampString = "367905517.821074"
+         timestampString = "367914384.008347"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "177"
-         endingLineNumber = "177"
-         landmarkName = "main(int argc, const char * argv[])"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "SmartCrop/main.cpp"
-         timestampString = "367905517.821074"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "173"
-         endingLineNumber = "173"
-         landmarkName = "main(int argc, const char * argv[])"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "SmartCrop/main.cpp"
-         timestampString = "367905517.821074"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "220"
-         endingLineNumber = "220"
-         landmarkName = "main(int argc, const char * argv[])"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "SmartCrop/main.cpp"
-         timestampString = "367905385.402624"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "125"
-         endingLineNumber = "125"
+         startingLineNumber = "159"
+         endingLineNumber = "159"
          landmarkName = "smart_crop(JSAMPLE * &amp;in, long in_size, JSAMPLE * &amp;out, jpeg_decompress_struct &amp;cinfo, int target_size)"
          landmarkType = "7">
       </FileBreakpoint>
@@ -60,11 +21,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "SmartCrop/main.cpp"
-         timestampString = "367905385.402624"
+         timestampString = "367914384.008347"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "123"
-         endingLineNumber = "123"
+         startingLineNumber = "157"
+         endingLineNumber = "157"
          landmarkName = "smart_crop(JSAMPLE * &amp;in, long in_size, JSAMPLE * &amp;out, jpeg_decompress_struct &amp;cinfo, int target_size)"
          landmarkType = "7">
       </FileBreakpoint>
@@ -73,11 +34,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "SmartCrop/main.cpp"
-         timestampString = "367905385.402624"
+         timestampString = "367914384.008347"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "122"
-         endingLineNumber = "122"
+         startingLineNumber = "156"
+         endingLineNumber = "156"
          landmarkName = "smart_crop(JSAMPLE * &amp;in, long in_size, JSAMPLE * &amp;out, jpeg_decompress_struct &amp;cinfo, int target_size)"
          landmarkType = "7">
       </FileBreakpoint>
@@ -86,11 +47,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "SmartCrop/main.cpp"
-         timestampString = "367905385.402624"
+         timestampString = "367914384.008347"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "121"
-         endingLineNumber = "121"
+         startingLineNumber = "155"
+         endingLineNumber = "155"
          landmarkName = "smart_crop(JSAMPLE * &amp;in, long in_size, JSAMPLE * &amp;out, jpeg_decompress_struct &amp;cinfo, int target_size)"
          landmarkType = "7">
       </FileBreakpoint>
@@ -99,11 +60,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "SmartCrop/main.cpp"
-         timestampString = "367905909.066377"
+         timestampString = "367914384.008347"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "133"
-         endingLineNumber = "133"
+         startingLineNumber = "167"
+         endingLineNumber = "167"
          landmarkName = "smart_crop(JSAMPLE * &amp;in, long in_size, JSAMPLE * &amp;out, jpeg_decompress_struct &amp;cinfo, int target_size)"
          landmarkType = "7">
       </FileBreakpoint>
@@ -112,12 +73,90 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "SmartCrop/main.cpp"
-         timestampString = "367905912.88599"
+         timestampString = "367914384.008347"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "132"
-         endingLineNumber = "132"
+         startingLineNumber = "166"
+         endingLineNumber = "166"
          landmarkName = "smart_crop(JSAMPLE * &amp;in, long in_size, JSAMPLE * &amp;out, jpeg_decompress_struct &amp;cinfo, int target_size)"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "SmartCrop/main.cpp"
+         timestampString = "367914384.008347"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "120"
+         endingLineNumber = "120"
+         landmarkName = "entropy(JSAMPLE * &amp;in, jpeg_decompress_struct &amp;cinfo, int x, int y, int width, int height)"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "SmartCrop/main.cpp"
+         timestampString = "367914384.008347"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "119"
+         endingLineNumber = "119"
+         landmarkName = "entropy(JSAMPLE * &amp;in, jpeg_decompress_struct &amp;cinfo, int x, int y, int width, int height)"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "SmartCrop/main.cpp"
+         timestampString = "367914384.008347"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "111"
+         endingLineNumber = "111"
+         landmarkName = "entropy(JSAMPLE * &amp;in, jpeg_decompress_struct &amp;cinfo, int x, int y, int width, int height)"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "SmartCrop/main.cpp"
+         timestampString = "367914384.008347"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "115"
+         endingLineNumber = "115"
+         landmarkName = "entropy(JSAMPLE * &amp;in, jpeg_decompress_struct &amp;cinfo, int x, int y, int width, int height)"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "SmartCrop/main.cpp"
+         timestampString = "367914384.008347"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "103"
+         endingLineNumber = "103"
+         landmarkName = "entropy(JSAMPLE * &amp;in, jpeg_decompress_struct &amp;cinfo, int x, int y, int width, int height)"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "SmartCrop/main.cpp"
+         timestampString = "367914384.008347"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "109"
+         endingLineNumber = "109"
+         landmarkName = "entropy(JSAMPLE * &amp;in, jpeg_decompress_struct &amp;cinfo, int x, int y, int width, int height)"
          landmarkType = "7">
       </FileBreakpoint>
    </FileBreakpoints>
