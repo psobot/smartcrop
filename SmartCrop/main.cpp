@@ -92,7 +92,7 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out, jpeg_decompress_str
     int slice_length = 16;
     int c = cinfo.output_components;
     
-    target_size *= OUT_FACTOR;
+    //target_size *= OUT_FACTOR;
     int crop_width = target_size;
     int crop_height = target_size;
     /*
@@ -116,20 +116,18 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out, jpeg_decompress_str
         }
     }*/
     
-    crop_width = crop_height = width/2;
-    
     out = (JSAMPLE*) malloc(crop_width * crop_height * c); 
     
     for (int _y = 0; _y < crop_height; _y++) {
         for (int _x = 0; _x < crop_width; _x++) {
             for (char _c = 0; _c < c; _c++) {
-                int in_idx = ((_y + y) * cinfo.image_width) + (_x + x) + _c;
+                int in_idx = (c * (((_y + y) * (cinfo.image_width / IN_FACTOR)) + (_x + x))) + _c;
                 if (in_idx > in_size) {
                     cout << "_y = " << _y << ", _x = " << _x << ", _c = " << (int)_c << endl;
                     cout << "Input buffer size = " << in_size << ", requested index at " << in_idx << ", " << (in_idx - in_size) << " over." << endl;
                     return -1;
                 }
-                out[(_y * crop_width) + _x + _c] = in[in_idx];   
+                out[c * ((_y * crop_width) + _x) + _c] = in[in_idx];
             }
         }
     }
@@ -168,8 +166,6 @@ int main(int argc, const char * argv[]) {
     
     jpeg_error_mgr       jerr;
     for (vector<string>::const_iterator it = _inputs.begin(); it != _inputs.end(); it++) {
-
-
         FILE * file = fopen((*it).c_str(), "r");
         
         jpeg_decompress_struct colour_cinfo;
@@ -202,7 +198,7 @@ int main(int argc, const char * argv[]) {
         jpeg_create_compress(&oinfo);
         jpeg_stdio_dest(&oinfo, ofile);
 
-        target_size = colour_cinfo.image_width / (IN_FACTOR * 2);
+        //target_size = colour_cinfo.image_width / (IN_FACTOR * 2);
         oinfo.image_width      = target_size * OUT_FACTOR;
         oinfo.image_height     = target_size * OUT_FACTOR;
         oinfo.scale_denom      = OUT_FACTOR;
@@ -215,7 +211,7 @@ int main(int argc, const char * argv[]) {
         
         JSAMPROW row_pointer;
         while (oinfo.next_scanline < oinfo.image_height) {
-            row_pointer = (JSAMPROW) &colour_buf[oinfo.next_scanline * oinfo.image_width * oinfo.input_components];
+            row_pointer = (JSAMPROW) &cropped_buf[oinfo.next_scanline * oinfo.image_width * oinfo.input_components];
             jpeg_write_scanlines(&oinfo, &row_pointer, 1);
         }
         
