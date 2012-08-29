@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		33B2258F15EB34D3008D9A42 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 33B2258E15EB34D3008D9A42 /* main.cpp */; };
 		33B2259115EB34D3008D9A42 /* SmartCrop.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 33B2259015EB34D3008D9A42 /* SmartCrop.1 */; };
+		33B2259815EB35E9008D9A42 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 33B2259715EB35E9008D9A42 /* libjpeg.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +29,11 @@
 		33B2258A15EB34D3008D9A42 /* SmartCrop */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SmartCrop; sourceTree = BUILT_PRODUCTS_DIR; };
 		33B2258E15EB34D3008D9A42 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		33B2259015EB34D3008D9A42 /* SmartCrop.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = SmartCrop.1; sourceTree = "<group>"; };
+		33B2259715EB35E9008D9A42 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = ../../../usr/local/Cellar/jpeg/8c/lib/libjpeg.a; sourceTree = "<group>"; };
+		33B2259B15EB3654008D9A42 /* jconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = jconfig.h; sourceTree = "<group>"; };
+		33B2259C15EB3654008D9A42 /* jerror.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = jerror.h; sourceTree = "<group>"; };
+		33B2259D15EB3654008D9A42 /* jmorecfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = jmorecfg.h; sourceTree = "<group>"; };
+		33B2259E15EB3654008D9A42 /* jpeglib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = jpeglib.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				33B2259815EB35E9008D9A42 /* libjpeg.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +51,8 @@
 		33B2257F15EB34D3008D9A42 = {
 			isa = PBXGroup;
 			children = (
+				33B2259715EB35E9008D9A42 /* libjpeg.a */,
+				33B2259F15EB3658008D9A42 /* JPEG Headers */,
 				33B2258D15EB34D3008D9A42 /* SmartCrop */,
 				33B2258B15EB34D3008D9A42 /* Products */,
 			);
@@ -64,6 +73,17 @@
 				33B2259015EB34D3008D9A42 /* SmartCrop.1 */,
 			);
 			path = SmartCrop;
+			sourceTree = "<group>";
+		};
+		33B2259F15EB3658008D9A42 /* JPEG Headers */ = {
+			isa = PBXGroup;
+			children = (
+				33B2259B15EB3654008D9A42 /* jconfig.h */,
+				33B2259C15EB3654008D9A42 /* jerror.h */,
+				33B2259D15EB3654008D9A42 /* jmorecfg.h */,
+				33B2259E15EB3654008D9A42 /* jpeglib.h */,
+			);
+			name = "JPEG Headers";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -171,6 +191,10 @@
 		33B2259515EB34D3008D9A42 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/jpeg/8c/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -178,6 +202,10 @@
 		33B2259615EB34D3008D9A42 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/jpeg/8c/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
