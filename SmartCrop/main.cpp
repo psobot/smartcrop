@@ -38,6 +38,7 @@
 
 #define STRIDE 10
 #define IN_FACTOR 8  // Power of 2, initial scale down factor.
+#define JPEG_QUALITY 75
 
 using namespace std;
 
@@ -103,8 +104,6 @@ double entropy(JSAMPLE * &in, jpeg_decompress_struct &cinfo, int x, int y, int w
             histogram[(JSAMPLE) val / (256/HISTOGRAM_RESOLUTION)]++;
         }
     }
-    
-    //assert(incs == 13824);
     
     int area = width * height;
     double e = 0.0f;
@@ -194,7 +193,7 @@ int main(int argc, const char * argv[]) {
     }
     
     int target_size = 124;
-    int lim = 500;
+    int lim = 5000;
     
     jpeg_error_mgr       jerr;
     int done = 0;
@@ -209,15 +208,18 @@ int main(int argc, const char * argv[]) {
         
         JSAMPLE* colour_buf = NULL;
         long colour_buf_size = decompress(file, colour_cinfo, colour_buf);
+        jpeg_destroy_decompress(&colour_cinfo);
+        
         
         JSAMPLE* cropped_buf = NULL;
         long cropped_buf_size = smart_crop(colour_buf, colour_buf_size,
                                            cropped_buf, colour_cinfo, target_size);
         
+        free(colour_buf);
+        
         if (cropped_buf_size < 0){
             cout << "Cropping failed!" << endl;
             free(cropped_buf);            
-            free(colour_buf);
             fclose(file);
             continue;
         }
@@ -240,7 +242,7 @@ int main(int argc, const char * argv[]) {
         oinfo.in_color_space   = colour_cinfo.out_color_space;
         
         jpeg_set_defaults(&oinfo);
-        jpeg_set_quality(&oinfo, 95, true);
+        jpeg_set_quality(&oinfo, JPEG_QUALITY, true);
         jpeg_start_compress(&oinfo, true);
         
         JSAMPROW row_pointer;
@@ -250,10 +252,10 @@ int main(int argc, const char * argv[]) {
         }
         
         jpeg_finish_compress(&oinfo);
+        jpeg_destroy_compress(&oinfo);
         
         TIMER_END;
         free(cropped_buf);            
-        free(colour_buf);
         fclose(file);
         fclose(ofile);
     }
