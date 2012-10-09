@@ -1,9 +1,9 @@
 //
-//  main.cpp
+//  smartcrop.cpp
 //  SmartCrop
 //
 //  Created by Peter Sobot on 8/26/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//  Copyright (c) 2012 Peter Sobot. All rights reserved.
 //
 
 #include <iostream>
@@ -15,11 +15,14 @@
 #include <vector>
 #include <math.h>
 #include <assert.h>
-#include "jpeglib.h" // TODO: This is included improperly.
+
+extern "C" {
+#include <jpeglib.h>
+}
 
 #define OPTIONAL_ARGUMENT(pos, name) (argc > (pos+1) ? argv[pos+1] : DEFAULT_##name)
 
-#define DEFAULT_SRC "/Volumes/Fry HD/Pictures/iPhoto Library/Modified/2012/*/IMG_*.jpg"//"/Volumes/Fry HD/Pictures/iPhoto Library/Modified/201*/*/*.jpg"
+#define DEFAULT_SRC "/Volumes/Fry HD/Pictures/iPhoto Library/Modified/2012/NYC*/*.jpg"//"/Volumes/Fry HD/Pictures/iPhoto Library/Modified/201*/*/*.jpg"
 #define DEFAULT_DEST "/Users/psobot/out_imgs/"//"/Volumes/why/www.petersobot.com/source/images/thumbs/"
 
 #define TIMER_START(desc) \
@@ -42,6 +45,8 @@
 
 using namespace std;
 
+//  Credit goes to: http://stackoverflow.com/questions/8401777/simple-glob-in-c-on-unix-system
+//  by Piti Ongmongkolkul
 inline vector<string> glob(const string& pat){
     glob_t glob_result;
     glob(pat.c_str(),GLOB_TILDE,NULL,&glob_result);
@@ -53,6 +58,7 @@ inline vector<string> glob(const string& pat){
     return ret;
 }
 
+//  JPEG-decompress FILE into buf.
 long decompress(FILE* file, jpeg_decompress_struct &cinfo, JSAMPLE * &buf) {
     fseek(file, 0, 0);
     
@@ -197,10 +203,13 @@ int main(int argc, const char * argv[]) {
     
     jpeg_error_mgr       jerr;
     int done = 0;
+    if (_inputs.size() == 0) {
+        cout << "No files!" << endl;
+    }
     for (vector<string>::const_iterator it = _inputs.begin(); it != _inputs.end() && done < lim; it++, done++) {
         TIMER_START("Image processing");
         FILE * file = fopen((*it).c_str(), "r");
-        //cout << "Opened " << (*it) << endl;
+        cout << "Opened " << (*it) << endl;
         
         jpeg_decompress_struct colour_cinfo;
         colour_cinfo.err = jpeg_std_error(&jerr);
@@ -251,6 +260,7 @@ int main(int argc, const char * argv[]) {
             jpeg_write_scanlines(&oinfo, &row_pointer, 1);
         }
         
+        //  TODO: If this next line fails, our outpath may not exist. Verify.
         jpeg_finish_compress(&oinfo);
         jpeg_destroy_compress(&oinfo);
         
