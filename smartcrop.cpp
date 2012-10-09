@@ -47,8 +47,8 @@ extern "C" {
 
 #define MAXPATHLEN 512
 #define STRIDE 10
-#define IN_FACTOR 8  // Power of 2, initial scale down factor.
-#define JPEG_QUALITY 75
+#define DEFAULT_IN_FACTOR 8  // Power of 2, initial scale down factor.
+#define DEFAULT_JPEG_QUALITY 75
 
 using namespace std;
 
@@ -56,7 +56,7 @@ using namespace std;
 //  by Piti Ongmongkolkul
 inline vector<string> glob(const string& pat){
     glob_t glob_result;
-    glob(pat.c_str(),GLOB_TILDE,NULL,&glob_result);
+    glob( pat.c_str(),GLOB_TILDE,NULL,&glob_result );
     vector<string> ret;
     for(unsigned int i = 0; i < glob_result.gl_pathc; ++i){
         ret.push_back(string(glob_result.gl_pathv[i]));
@@ -67,7 +67,7 @@ inline vector<string> glob(const string& pat){
 
 //  JPEG-decompress FILE into buf.
 //  TODO: Take into account rotation bits. (coefficients, really)
-long decompress(FILE* file, jpeg_decompress_struct &cinfo, JSAMPLE * &buf) {
+long decompress(FILE* file, jpeg_decompress_struct &cinfo, JSAMPLE * &buf, int in_factor) {
     fseek(file, 0, 0);
     
     jpeg_stdio_src(&cinfo, file);
@@ -78,7 +78,7 @@ long decompress(FILE* file, jpeg_decompress_struct &cinfo, JSAMPLE * &buf) {
         //  Throw error?
     //}
     cinfo.scale_num = 1;
-    cinfo.scale_denom = IN_FACTOR;
+    cinfo.scale_denom = in_factor;
     
     jpeg_start_decompress(&cinfo);
     
@@ -97,7 +97,7 @@ long decompress(FILE* file, jpeg_decompress_struct &cinfo, JSAMPLE * &buf) {
 }
 
 //  Determine the entropy of a cropped portion of the buffer.
-double entropy(JSAMPLE * &in, jpeg_decompress_struct &cinfo, int x, int y, int width, int height) {
+double entropy(JSAMPLE * &in, jpeg_decompress_struct &cinfo, int x, int y, int width, int height, int in_factor) {
 #define HISTOGRAM_RESOLUTION 16
     long histogram[HISTOGRAM_RESOLUTION];
     for (int i = 0; i < HISTOGRAM_RESOLUTION; i++) histogram[i] = 0;
@@ -107,11 +107,11 @@ double entropy(JSAMPLE * &in, jpeg_decompress_struct &cinfo, int x, int y, int w
         for (int _x = x; _x < x + width; _x++) {
             float val = 0;
             if (cinfo.out_color_components == 3) {
-                int idx = ((_y * (cinfo.image_width / IN_FACTOR)) + _x) * cinfo.out_color_components;
+                int idx = ((_y * (cinfo.image_width / in_factor)) + _x) * cinfo.out_color_components;
                 val = (0.299f * in[idx]) + (0.587f * in[idx+1]) + (0.114 * in[idx+2]);
             } else {
                 for (int _c = 0; _c < cinfo.out_color_components; _c++) {
-                    int idx = ((_y * (cinfo.image_width / IN_FACTOR)) + _x) * cinfo.out_color_components + _c;
+                    int idx = ((_y * (cinfo.image_width / in_factor)) + _x) * cinfo.out_color_components + _c;
                     val += in[idx];
                 }
             }
@@ -133,21 +133,22 @@ double entropy(JSAMPLE * &in, jpeg_decompress_struct &cinfo, int x, int y, int w
     return -1.0f * e;
 }
 
-long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out, jpeg_decompress_struct &cinfo, int target_size) {
+long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out,
+                jpeg_decompress_struct &cinfo, int _w, int _h, int in_factor) {
     int x = 0;
     int y = 0;
-    int width = cinfo.image_width / IN_FACTOR;
-    int height = cinfo.image_height / IN_FACTOR;
+    int width = cinfo.image_width / in_factor;
+    int height = cinfo.image_height / in_factor;
     int slice_length = 16;
     int c = cinfo.output_components;
     
-    int crop_width = target_size;
-    int crop_height = target_size;
+    int crop_width = _w;
+    int crop_height = _h;
     
-    while ((width - x) > target_size) {
+    while ((width - x) > crop_width) {
         int slice_width = min(width - x - crop_width, slice_length);
-        if (entropy(in, cinfo, x, 0, slice_width, cinfo.image_height / IN_FACTOR) <
-            entropy(in, cinfo, width - slice_width, 0, slice_width, cinfo.image_height / IN_FACTOR)) {
+        if (entropy(in, cinfo, x, 0, slice_width, cinfo.image_height / in_factor, in_factor) <
+            entropy(in, cinfo, width - slice_width, 0, slice_width, cinfo.image_height / in_factor, in_factor)) {
             x += slice_width;
         } else {
             width -= slice_width;
@@ -156,8 +157,8 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out, jpeg_decompress_str
                 
     while ((height - y) > crop_height) {
         int slice_height = min(height - y - crop_height, slice_length);
-        if (entropy(in, cinfo, 0, y, cinfo.image_width / IN_FACTOR, slice_height) < 
-            entropy(in, cinfo, 0, height - slice_height, cinfo.image_width / IN_FACTOR, slice_height)) {
+        if (entropy(in, cinfo, 0, y, cinfo.image_width / in_factor, slice_height, in_factor) < 
+            entropy(in, cinfo, 0, height - slice_height, cinfo.image_width / in_factor, slice_height, in_factor)) {
             y += slice_height;
         } else {
             height -= slice_height;
@@ -169,12 +170,8 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out, jpeg_decompress_str
     for (int _y = 0; _y < crop_height; _y++) {
         for (int _x = 0; _x < crop_width; _x++) {
             for (char _c = 0; _c < c; _c++) {
-                int in_idx = (c * (((_y + y) * (cinfo.image_width / IN_FACTOR)) + (_x + x))) + _c;
-                if (in_idx > in_size) {
-                    cerr << "_y = " << _y << ", _x = " << _x << ", _c = " << (int)_c << endl;
-                    cerr << "Input buffer size = " << in_size << ", requested index at " << in_idx << ", " << (in_idx - in_size) << " over." << endl;
-                    return -1;
-                }
+                int in_idx = (c * (((_y + y) * (cinfo.image_width / in_factor)) + (_x + x))) + _c;
+                if (in_idx > in_size) return -1;
                 out[c * ((_y * crop_width) + _x) + _c] = in[in_idx];
             }
         }
@@ -186,9 +183,13 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out, jpeg_decompress_str
 int print_usage( const char* my_name ) {
     cerr << "SmartCrop by Peter Sobot" << endl;
     cerr << "------------------------" << endl;
-    cerr << "Usage: " << my_name << " [-o output_dir] [-d date_from] input_file input_file ..." << endl;
-    cerr << "       Default output directory is the current directory." << endl;
-    cerr << "       Default date from is forever ago." << endl;
+    cerr << "Usage: " << my_name << " {options} input_file input_file ..." << endl;
+    cerr << "       -o: output directory. Default output directory is the current directory." << endl;
+    cerr << "       -d: date limit.       Default date from is forever ago." << endl;
+    cerr << "       -q: jpeg quality.     Default is " << DEFAULT_JPEG_QUALITY << "." << endl;
+    cerr << endl;
+    cerr << "       -w: width  (in pixels) of crop area. (Default 124px)" << endl;
+    cerr << "       -h: height (in pixels) of crop area. (Default 124px)" << endl;
     return EXIT_FAILURE;
 }
                 
@@ -196,15 +197,32 @@ int main(int argc, const char * argv[]) {
     char _tmp[MAXPATHLEN];
     string output_dir = ( getcwd( _tmp, MAXPATHLEN ) ? string( _tmp ) : string("") );
     string date_from;
+    int jpeg_quality = DEFAULT_JPEG_QUALITY;
+    int height = 124;
+    int width = 124;
 
     char c;
-    while ((c = getopt(argc, (char **) argv, ":o:d")) != -1) {
+    while ((c = getopt(argc, (char **) argv, "o:d:q:w:h:")) != -1) {
         switch (c) {
             case 'o':
                 output_dir = string( optarg );
                 break;
             case 'd':
                 date_from = string( optarg );
+                break;
+            case 'q':
+                jpeg_quality = atoi( optarg );
+                if ( jpeg_quality < 1 || jpeg_quality > 100 ) {
+                    cerr << "JPEG quality level (" << jpeg_quality << ") out of range." << endl;
+                    jpeg_quality = jpeg_quality > 100 ? 100 : 1;
+                    cerr << "Snapping quality to " << jpeg_quality << "." << endl;
+                }
+                break;
+            case 'w':
+                width = atoi( optarg );
+                break;
+            case 'h':
+                height = atoi( optarg );
                 break;
             default:
                 return print_usage( argv[0] );
@@ -239,7 +257,6 @@ int main(int argc, const char * argv[]) {
         inputs = _inputs;
     }
     
-    int target_size = 124;
     int lim = 5000;
     
     jpeg_error_mgr jerr;
@@ -261,20 +278,26 @@ int main(int argc, const char * argv[]) {
         
         jpeg_decompress_struct colour_cinfo;
         colour_cinfo.err = jpeg_std_error(&jerr);
-        jpeg_create_decompress(&colour_cinfo);
-        
+
         JSAMPLE* colour_buf = NULL;
-        long colour_buf_size = decompress(file, colour_cinfo, colour_buf);
-        jpeg_destroy_decompress(&colour_cinfo);
-        
-        
         JSAMPLE* cropped_buf = NULL;
-        long cropped_buf_size = smart_crop(colour_buf, colour_buf_size,
-                                           cropped_buf, colour_cinfo, target_size);
+        long cropped_buf_size = -1;
+        long colour_buf_size  = -1;
         
-        free(colour_buf);
-        
-        if (cropped_buf_size < 0){
+        for ( int in_factor = DEFAULT_IN_FACTOR;
+              cropped_buf_size < 0 && in_factor > 0;
+              in_factor /= 2 ) {
+            jpeg_create_decompress(&colour_cinfo);
+            
+            colour_buf_size = decompress(file, colour_cinfo, colour_buf, in_factor);
+            jpeg_destroy_decompress(&colour_cinfo);
+            
+            cropped_buf_size = smart_crop(colour_buf, colour_buf_size,
+                                               cropped_buf, colour_cinfo, width, height, in_factor);
+            free(colour_buf);
+        }
+
+        if ( cropped_buf_size < 0 ) {
             cerr << "Cropping failed!" << endl;
             free(cropped_buf);            
             fclose(file);
@@ -301,14 +324,13 @@ int main(int argc, const char * argv[]) {
         jpeg_create_compress(&oinfo);
         jpeg_stdio_dest(&oinfo, ofile);
 
-        //target_size = colour_cinfo.image_width / (IN_FACTOR * 2);
-        oinfo.image_width      = target_size;
-        oinfo.image_height     = target_size;
+        oinfo.image_width      = width;
+        oinfo.image_height     = height;
         oinfo.input_components = colour_cinfo.output_components;
         oinfo.in_color_space   = colour_cinfo.out_color_space;
         
         jpeg_set_defaults(&oinfo);
-        jpeg_set_quality(&oinfo, JPEG_QUALITY, true);
+        jpeg_set_quality(&oinfo, jpeg_quality, true);
         jpeg_start_compress(&oinfo, true);
         
         JSAMPROW row_pointer;
@@ -319,7 +341,6 @@ int main(int argc, const char * argv[]) {
             jpeg_write_scanlines(&oinfo, &row_pointer, 1);
         }
         
-        //  TODO: If this next line fails, our outpath may not exist. Verify.
         jpeg_finish_compress(&oinfo);
         jpeg_destroy_compress(&oinfo);
         
