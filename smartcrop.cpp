@@ -3,7 +3,8 @@
 //  SmartCrop
 //
 //  Created by Peter Sobot on 8/26/12.
-//  Copyright (c) 2012 Peter Sobot. All rights reserved.
+//  Copyright (c) 2012 Peter Sobot.
+//  Licensed under MIT.
 //
 
 #include <iostream>
@@ -20,11 +21,6 @@ extern "C" {
 #include <jpeglib.h>
 }
 
-#define OPTIONAL_ARGUMENT(pos, name) (argc > (pos+1) ? argv[pos+1] : DEFAULT_##name)
-
-#define DEFAULT_SRC "/Volumes/Fry HD/Pictures/iPhoto Library/Modified/2012/NYC*/*.jpg"//"/Volumes/Fry HD/Pictures/iPhoto Library/Modified/201*/*/*.jpg"
-#define DEFAULT_DEST "/Users/psobot/out_imgs/"//"/Volumes/why/www.petersobot.com/source/images/thumbs/"
-
 #define TIMER_START(desc) \
     long __mtime, __seconds, __useconds; \
     const char* __timer_desc = desc; \
@@ -36,9 +32,20 @@ extern "C" {
     __seconds  = __end.tv_sec  - __start.tv_sec; \
     __useconds = __end.tv_usec - __start.tv_usec; \
     __mtime = ((__seconds) * 1000 + __useconds/1000.0) + 0.5; \
-    cout << __timer_desc << " took " << __mtime << " ms." << endl; \
+    cerr << __timer_desc << " took " << __mtime << " ms." << endl; \
     __timer_desc = "";
 
+#define TIMER_END_SHORT \
+    timeval __end; \
+    gettimeofday(&__end, NULL); \
+    __seconds  = __end.tv_sec  - __start.tv_sec; \
+    __useconds = __end.tv_usec - __start.tv_usec; \
+    __mtime = ((__seconds) * 1000 + __useconds/1000.0) + 0.5; \
+    cerr << __mtime << "ms"; \
+    __timer_desc = "";
+
+
+#define MAXPATHLEN 512
 #define STRIDE 10
 #define IN_FACTOR 8  // Power of 2, initial scale down factor.
 #define JPEG_QUALITY 75
@@ -59,11 +66,13 @@ inline vector<string> glob(const string& pat){
 }
 
 //  JPEG-decompress FILE into buf.
+//  TODO: Take into account rotation bits. (coefficients, really)
 long decompress(FILE* file, jpeg_decompress_struct &cinfo, JSAMPLE * &buf) {
     fseek(file, 0, 0);
     
     jpeg_stdio_src(&cinfo, file);
     jpeg_read_header(&cinfo, true);
+//    jvirt_barray_ptr* coeff_arrays = jpeg_read_coefficients(&cinfo);
     
     //if (cinfo.image_width < target_size * 4) {
         //  Throw error?
@@ -162,8 +171,8 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out, jpeg_decompress_str
             for (char _c = 0; _c < c; _c++) {
                 int in_idx = (c * (((_y + y) * (cinfo.image_width / IN_FACTOR)) + (_x + x))) + _c;
                 if (in_idx > in_size) {
-                    cout << "_y = " << _y << ", _x = " << _x << ", _c = " << (int)_c << endl;
-                    cout << "Input buffer size = " << in_size << ", requested index at " << in_idx << ", " << (in_idx - in_size) << " over." << endl;
+                    cerr << "_y = " << _y << ", _x = " << _x << ", _c = " << (int)_c << endl;
+                    cerr << "Input buffer size = " << in_size << ", requested index at " << in_idx << ", " << (in_idx - in_size) << " over." << endl;
                     return -1;
                 }
                 out[c * ((_y * crop_width) + _x) + _c] = in[in_idx];
@@ -173,24 +182,56 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out, jpeg_decompress_str
     
     return crop_width * crop_height * c;
 }
+
+int print_usage( const char* my_name ) {
+    cerr << "SmartCrop by Peter Sobot" << endl;
+    cerr << "------------------------" << endl;
+    cerr << "Usage: " << my_name << " [-o output_dir] [-d date_from] input_file input_file ..." << endl;
+    cerr << "       Default output directory is the current directory." << endl;
+    cerr << "       Default date from is forever ago." << endl;
+    return EXIT_FAILURE;
+}
                 
 int main(int argc, const char * argv[]) {
+    char _tmp[MAXPATHLEN];
+    string output_dir = ( getcwd( _tmp, MAXPATHLEN ) ? string( _tmp ) : string("") );
+    string date_from;
+
+    char c;
+    while ((c = getopt(argc, (char **) argv, ":o:d")) != -1) {
+        switch (c) {
+            case 'o':
+                output_dir = string( optarg );
+                break;
+            case 'd':
+                date_from = string( optarg );
+                break;
+            default:
+                return print_usage( argv[0] );
+        }
+    }
+
     vector<string> inputs;
-    vector<string> _inputs = glob(OPTIONAL_ARGUMENT(0, SRC));
-    string output_dir = OPTIONAL_ARGUMENT(1, DEST);
-    
-    if (argc > 3) {
+    vector<string> _inputs;
+
+    for ( int i = optind; i < argc; i++ )
+        _inputs.push_back( argv[i] );
+
+    if ( !date_from.empty() ) {
+        cerr << "Limiting input images since date " << date_from << endl;
+
         tm _since;
-        strptime(argv[3], "%D", &_since);
-        time_t since = mktime(&_since);
-        for (vector<string>::const_iterator it = _inputs.begin(); it != _inputs.end(); it++) {
+        strptime( date_from.c_str(), "%D", &_since );
+        time_t since = mktime( &_since );
+        for ( vector<string>::const_iterator it = _inputs.begin();
+              it != _inputs.end(); it++ ) {
             struct stat st = {0};
-            int ret = lstat((*it).c_str(), &st);
-            if (ret == -1) {
-                perror("lstat");
+            int ret = lstat( (*it).c_str(), &st );
+            if ( ret == -1 ) {
+                perror( "lstat" );
                 return EXIT_FAILURE;
             }
-            if (st.st_mtimespec.tv_sec >= since) {
+            if ( st.st_mtimespec.tv_sec >= since ) {
                 inputs.push_back(*it);
             }
         }
@@ -201,15 +242,22 @@ int main(int argc, const char * argv[]) {
     int target_size = 124;
     int lim = 5000;
     
-    jpeg_error_mgr       jerr;
+    jpeg_error_mgr jerr;
     int done = 0;
-    if (_inputs.size() == 0) {
-        cout << "No files!" << endl;
+
+    if ( _inputs.size() == 0 ) {
+        return print_usage( argv[0] );
+    } else {
+        cerr << "Thumbnailing " << _inputs.size() << " images..." << endl;
     }
-    for (vector<string>::const_iterator it = _inputs.begin(); it != _inputs.end() && done < lim; it++, done++) {
+
+    cerr << "Saving thumbnails to: " << output_dir << endl;
+  
+    for (vector<string>::const_iterator it = _inputs.begin();
+              it != _inputs.end() && done < lim; it++, done++) {
         TIMER_START("Image processing");
         FILE * file = fopen((*it).c_str(), "r");
-        cout << "Opened " << (*it) << endl;
+        cerr << "Processing " << (*it) << "...";
         
         jpeg_decompress_struct colour_cinfo;
         colour_cinfo.err = jpeg_std_error(&jerr);
@@ -227,7 +275,7 @@ int main(int argc, const char * argv[]) {
         free(colour_buf);
         
         if (cropped_buf_size < 0){
-            cout << "Cropping failed!" << endl;
+            cerr << "Cropping failed!" << endl;
             free(cropped_buf);            
             fclose(file);
             continue;
@@ -236,11 +284,20 @@ int main(int argc, const char * argv[]) {
         struct jpeg_compress_struct oinfo;
         oinfo.err = jpeg_std_error(&jerr);
         
-        //cout << "Writing to " << (*it + ".cropped.jpg") << endl;
-        
         char str[12];
         sprintf(str, "%d", done);
         FILE * ofile = fopen((output_dir + "/" + str + ".jpg").c_str(), "w");
+        
+        if ( !ofile ) {
+            //  Early out of the entire program - we can't write to the output dir!
+            free( cropped_buf );
+            fclose( file );
+
+            cerr << "Could not open output file for writing!" << endl;
+            cerr << "  (file path was: " << (output_dir + "/" + str + ".jpg") << ")" << endl;
+            return EXIT_FAILURE;
+        }
+        
         jpeg_create_compress(&oinfo);
         jpeg_stdio_dest(&oinfo, ofile);
 
@@ -256,7 +313,9 @@ int main(int argc, const char * argv[]) {
         
         JSAMPROW row_pointer;
         while (oinfo.next_scanline < oinfo.image_height) {
-            row_pointer = (JSAMPROW) &cropped_buf[oinfo.next_scanline * oinfo.image_width * oinfo.input_components];
+            row_pointer = (JSAMPROW) &cropped_buf[oinfo.next_scanline *
+                                                  oinfo.image_width   *
+                                                  oinfo.input_components];
             jpeg_write_scanlines(&oinfo, &row_pointer, 1);
         }
         
@@ -264,7 +323,10 @@ int main(int argc, const char * argv[]) {
         jpeg_finish_compress(&oinfo);
         jpeg_destroy_compress(&oinfo);
         
-        TIMER_END;
+        cerr << " ";
+        TIMER_END_SHORT;
+        cerr << "." << endl;
+
         free(cropped_buf);            
         fclose(file);
         fclose(ofile);
