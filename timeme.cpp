@@ -14,17 +14,13 @@ void TimeMe::End( bool _long_output ) {
     timeval __end;
     gettimeofday(&__end, NULL);
     
-    long __seconds, __useconds;
-    double __mtime;
-
-    __seconds  = __end.tv_sec  - __start.tv_sec;
-    __useconds = __end.tv_usec - __start.tv_usec;
-    __mtime = ((__seconds) * 1000 + __useconds/1000.0) + 0.5;
+    double mtime = (( (__end.tv_sec * 1000000) + __end.tv_usec ) -
+                    ( __start.tv_usec +  __start.tv_sec * 1000000 )) / 1000.0f;
     
     if ( _long_output )
-        std::cerr << description << " took " << __mtime << " ms." << std::endl;
+        std::cerr << description << " took " << mtime << " ms." << std::endl;
     else
-        std::cerr << __mtime << "ms";
+        std::cerr << mtime << "ms";
     ended = true;
 }
 
