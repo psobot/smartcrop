@@ -23,38 +23,56 @@
 #define STRIDE 10
 #define DEFAULT_IN_FACTOR 8  // Power of 2, initial scale down factor.
 #define DEFAULT_JPEG_QUALITY 75
-#define SEARCH_MULTIPLIER 4
+#define IN_FACTOR 8
 
 using namespace std;
 
 //  Determine the entropy of a cropped portion of the buffer.
 double entropy(Magick::Image image, int x, int y, int width, int height) {
-#define HISTOGRAM_RESOLUTION 16
+#define HISTOGRAM_RESOLUTION 16 // TODO: Not a define
     long histogram[HISTOGRAM_RESOLUTION];
     for (int i = 0; i < HISTOGRAM_RESOLUTION; i++) histogram[i] = 0;
     
     // Why not just use Magick's built in histogram and quantizer?
     // Turns out, that's absurdly slow.
     Magick::Pixels _all(image);
-    Magick::PixelPacket* pixels = _all.get(x, y, width, height);
+    Magick::PixelPacket* pixels = _all.get( x, y, width, height );
+
+    static const float MAX_DATA_VALUE = ( 1 << ( sizeof( Magick::PixelPacket ) * 2 ) );
+
+#ifdef DEBUG
+    cout << "MAX DATA VALUE IS " << MAX_DATA_VALUE << endl;
+    printf("Checking entropy on square from (%4d, %4d) to (%4d, %4d) = ", x, y, x + width, y + height);
+#endif
 
     for (int _y = 0; _y < height; _y++) {
         for (int _x = 0; _x < width; _x++) {
             Magick::PixelPacket* pixel = (pixels + ((_y * width) + _x));
-            float val = (0.299f * pixel->red) + (0.587f * pixel->green) + (0.114 * pixel->blue);
-            histogram[(unsigned char) val / (256/HISTOGRAM_RESOLUTION)]++;
+            float val = (0.299f * (char)pixel->red) + (0.587f * pixel->green) + (0.114 * pixel->blue);
+            histogram[(int) (( val / MAX_DATA_VALUE ) * HISTOGRAM_RESOLUTION)]++;
         }
     }
     
     int area = width * height;
     double e = 0.0f;
     double p = 0;
+#ifdef DEBUG
+        cerr << "Histogram = ";
+#endif
     for (int i = 0; i < HISTOGRAM_RESOLUTION; i++) {
+#ifdef DEBUG
+        cerr << histogram[i];
+#endif
         p = (double) histogram[i] / (double) area;
         if (p > 0) {
             e += p * log2(p);
         }
     }
+
+#ifdef DEBUG
+    cerr << endl;
+    printf("%f\n", -1.0f * e);
+#endif
     
     return -1.0f * e;
 }
@@ -207,11 +225,16 @@ int main(int argc, const char * argv[]) {
         //  We want a good-sized search space for our sliding window.
         //  Make this scale to 4x the width and height of our target.
 
-        if ( input.columns() > SEARCH_MULTIPLIER * width &&
-             input.rows() > SEARCH_MULTIPLIER * height )
-             input.scale( Magick::Geometry( SEARCH_MULTIPLIER * width, SEARCH_MULTIPLIER * height ) );
+        if ( width  < input.columns() / IN_FACTOR &&
+             height < input.rows()    / IN_FACTOR )
+             input.scale( Magick::Geometry( input.columns() / IN_FACTOR, input.rows() / IN_FACTOR ) );
         }
 
+#ifdef DEBUG
+        cout << "effective width  = " << input.columns() << endl;
+        cout << "effective height = " << input.rows() << endl;
+        cout << "in_factor is = " << IN_FACTOR << endl;
+#endif
         //  Strip metadata and exif tags.
         input.strip();
 

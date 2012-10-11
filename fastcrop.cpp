@@ -72,11 +72,7 @@ long decompress(FILE* file, jpeg_decompress_struct &cinfo, JSAMPLE * &buf, int i
     
     jpeg_stdio_src(&cinfo, file);
     jpeg_read_header(&cinfo, true);
-//    jvirt_barray_ptr* coeff_arrays = jpeg_read_coefficients(&cinfo);
-    
-    //if (cinfo.image_width < target_size * 4) {
-        //  Throw error?
-    //}
+
     cinfo.scale_num = 1;
     cinfo.scale_denom = in_factor;
     
@@ -101,7 +97,14 @@ double entropy(JSAMPLE * &in, jpeg_decompress_struct &cinfo, int x, int y, int w
 #define HISTOGRAM_RESOLUTION 16
     long histogram[HISTOGRAM_RESOLUTION];
     for (int i = 0; i < HISTOGRAM_RESOLUTION; i++) histogram[i] = 0;
-    
+
+    static const float MAX_DATA_VALUE = (float) ( 1 << sizeof( JSAMPLE ) * 8 );
+
+#ifdef DEBUG
+    cout << "MAX DATA VALUE IS " << MAX_DATA_VALUE << endl;
+    printf("Checking entropy on square from (%4d, %4d) to (%4d, %4d) = ", x, y, x + width, y + height);
+#endif
+
     int incs = 0;
     for (int _y = y; _y < y + height; _y++) {
         for (int _x = x; _x < x + width; _x++) {
@@ -116,19 +119,30 @@ double entropy(JSAMPLE * &in, jpeg_decompress_struct &cinfo, int x, int y, int w
                 }
             }
             incs++;
-            histogram[(JSAMPLE) val / (256/HISTOGRAM_RESOLUTION)]++;
+            histogram[(int) (( val / MAX_DATA_VALUE ) * HISTOGRAM_RESOLUTION)]++;
         }
     }
     
     int area = width * height;
     double e = 0.0f;
     double p = 0;
+#ifdef DEBUG
+        cerr << "Histogram = ";
+#endif
     for (int i = 0; i < HISTOGRAM_RESOLUTION; i++) {
+#ifdef DEBUG
+        cerr << histogram[i];
+#endif
         p = (double) histogram[i] / (double) area;
         if (p > 0) {
             e += p * log2(p);
         }
     }
+
+#ifdef DEBUG
+    cerr << endl;
+    printf("%f\n", -1.0f * e);
+#endif
 
     return -1.0f * e;
 }
@@ -145,6 +159,12 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out,
     int crop_width = _w;
     int crop_height = _h;
     
+#ifdef DEBUG
+    cout << "effective width  = " << width << endl;
+    cout << "effective height = " << height << endl;
+    cout << "in_factor is " << in_factor << endl;
+#endif
+
     while ((width - x) > crop_width) {
         int slice_width = min(width - x - crop_width, slice_length);
         if (entropy(in, cinfo, x, 0, slice_width, cinfo.image_height / in_factor, in_factor) <

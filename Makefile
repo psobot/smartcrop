@@ -13,11 +13,15 @@ default:
 	${COMPILER} ${INC2} -O3 ${SRC2} -o ${OUTPUT2}
 
 debug:
-	${COMPILER} -ggdb ${INC1} ${SRC1} -o ${OUTPUT1}
-	${COMPILER} -ggdb ${INC2} ${SRC2} -o ${OUTPUT2}
+	${COMPILER} -ggdb -D DEBUG ${INC1} ${SRC1} -o ${OUTPUT1}
+	${COMPILER} -ggdb -D DEBUG ${INC2} ${SRC2} -o ${OUTPUT2}
 
 clean:
 	rm ${OUTPUT1}
 	rm -rf ${OUTPUT1}.dSYM
 	rm ${OUTPUT2}
 	rm -rf ${OUTPUT2}.dSYM
+
+test: default
+	./smartcrop -q 100 ~/Pictures/iPhoto\ Library/Originals/2012/NYC/IMG_2371.JPG
+	diff 0.jpg 0fastcrop.jpg
