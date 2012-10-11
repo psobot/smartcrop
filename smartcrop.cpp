@@ -230,11 +230,6 @@ int main(int argc, const char * argv[]) {
              input.scale( Magick::Geometry( input.columns() / IN_FACTOR, input.rows() / IN_FACTOR ) );
         }
 
-#ifdef DEBUG
-        cout << "effective width  = " << input.columns() << endl;
-        cout << "effective height = " << input.rows() << endl;
-        cout << "in_factor is = " << IN_FACTOR << endl;
-#endif
         //  Strip metadata and exif tags.
         input.strip();
 

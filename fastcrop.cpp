@@ -148,22 +148,17 @@ double entropy(JSAMPLE * &in, jpeg_decompress_struct &cinfo, int x, int y, int w
 }
 
 long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out,
-                jpeg_decompress_struct &cinfo, int _w, int _h, int in_factor) {
+                         jpeg_decompress_struct &cinfo, int _w, int _h, int in_factor) {
     int x = 0;
     int y = 0;
     int width = cinfo.image_width / in_factor;
     int height = cinfo.image_height / in_factor;
+    
     int slice_length = 16;
     int c = cinfo.output_components;
     
     int crop_width = _w;
     int crop_height = _h;
-    
-#ifdef DEBUG
-    cout << "effective width  = " << width << endl;
-    cout << "effective height = " << height << endl;
-    cout << "in_factor is " << in_factor << endl;
-#endif
 
     while ((width - x) > crop_width) {
         int slice_width = min(width - x - crop_width, slice_length);
@@ -174,7 +169,7 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out,
             width -= slice_width;
         }
     }
-                
+
     while ((height - y) > crop_height) {
         int slice_height = min(height - y - crop_height, slice_length);
         if (entropy(in, cinfo, 0, y, cinfo.image_width / in_factor, slice_height, in_factor) < 
@@ -184,7 +179,7 @@ long smart_crop(JSAMPLE * &in, long in_size, JSAMPLE * &out,
             height -= slice_height;
         }
     }
-    
+
     out = (JSAMPLE*) malloc(crop_width * crop_height * c); 
     
     for (int _y = 0; _y < crop_height; _y++) {
@@ -313,7 +308,7 @@ int main(int argc, const char * argv[]) {
             jpeg_destroy_decompress(&colour_cinfo);
             
             cropped_buf_size = smart_crop(colour_buf, colour_buf_size,
-                                               cropped_buf, colour_cinfo, width, height, in_factor);
+                                          cropped_buf, colour_cinfo, width, height, in_factor);
             free(colour_buf);
         }
 

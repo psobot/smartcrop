@@ -69,9 +69,8 @@ images.shuffle.slice(0, lim).each do |file|
   output = output_dir + (num + 1).to_s + '.jpg'
   begin
     a = Time.now
-    im = Magick::Image.read(file).first.auto_orient.resize(0.2)
-    r = smart_crop(im, 248, 248)
-    r.resize!(124, 124, Magick::QuadraticFilter)
+    im = Magick::Image.read(file).first.auto_orient.resize(1.0/8.0)
+    r = smart_crop(im, 124, 124)
     r.strip!
     r.write(output) { self.quality = 85 }
     
